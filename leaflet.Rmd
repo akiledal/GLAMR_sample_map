@@ -14,9 +14,15 @@ samples <- readxl::read_excel("Great_Lakes_Omics_Datasets.xlsx",
     sheet = "samples")
 
 sample_lat_lon <- samples %>% 
-  dplyr::select(SampleID, lat, lon) %>% 
+  dplyr::select(SampleID, lat, lon, sample_type,StudyID) %>% 
+  rowwise() %>% 
   dplyr::mutate(lat = as.numeric(lat),
-         lon = as.numeric(lon))
+         lon = as.numeric(lon),
+         label_str = str_glue("<strong>{SampleID}</strong><br>{sample_type}<br>{StudyID}") %>% htmltools::HTML(), 
+         marker_color = case_when(sample_type == "amplicon" ~"white",
+                                  sample_type == "metagenome" ~ "green", 
+                                  sample_type == "metatranscriptome" ~ "blue"))
+
 ```
 
 
@@ -24,7 +30,8 @@ sample_lat_lon <- samples %>%
 ```{r}
 (GLAMR_samples <- leaflet(sample_lat_lon) %>% 
   addTiles() %>% 
-  addMarkers(~lon, ~lat,label = ~SampleID,
+  addAwesomeMarkers(~lon, ~lat, label = ~label_str, icon = awesomeIcons(icon = 'ios-close', iconColor = 'black',library = 'ion',markerColor = ~marker_color ),
+   #addMarkers(~lon, ~lat,label = ~SampleID,
   clusterOptions = markerClusterOptions())
 )
 

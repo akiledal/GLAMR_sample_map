@@ -7,9 +7,13 @@ output: html_notebook
 knitr::opts_knit$set(root.dir = here::here())
 library(tidyverse)
 library(leaflet)
+library(googledrive)
 ```
 
 ```{r}
+as_id("https://docs.google.com/spreadsheets/d/1z2IajV0Ay1lRjH9d0ibNBuf8PY0IbtEz/edit#gid=349037648") %>% 
+  drive_download("Great_Lakes_Omics_Datasets.xlsx",overwrite = TRUE)
+
 samples <- readxl::read_excel("Great_Lakes_Omics_Datasets.xlsx", 
     sheet = "samples")
 
@@ -36,6 +40,28 @@ sample_lat_lon <- samples %>%
 )
 
 htmlwidgets::saveWidget(GLAMR_samples, "index.html")
+
+# Add analytics
+
+# Define the new lines to be added
+new_lines <- c(
+  "<!-- Google tag (gtag.js) -->",
+  '<script async src="https://www.googletagmanager.com/gtag/js?id=G-PWFJHYJ9F8"></script>',
+  "<script>",
+  "  window.dataLayer = window.dataLayer || [];",
+  "  function gtag(){dataLayer.push(arguments);}",
+  "  gtag('js', new Date());",
+  "",
+  "  gtag('config', 'G-PWFJHYJ9F8');",
+  "</script>"
+)
+
+widget_html <- read_lines("index.html")
+
+# Insert the new lines after the third line of the HTML content
+html_content <- c(widget_html[1:3], new_lines, widget_html[4:length(widget_html)])
+
+writeLines(html_content, "index.html")
 
 ```
 
